@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getAssignments,
   assignAsset,
   returnAsset
 } from "../controllers/assignment.controller";
@@ -13,6 +14,11 @@ import {
 } from "../validations/assignment.validation";
 
 const router = Router();
+
+router.get(
+  "/",
+  getAssignments
+);
 
 router.post(
   "/",
