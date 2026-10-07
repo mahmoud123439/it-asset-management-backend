@@ -9,7 +9,7 @@ const options = {
       description: "IT Asset Management System API"
     }
   },
-  apis: []
+  apis: ["src/routes/*.ts"]
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

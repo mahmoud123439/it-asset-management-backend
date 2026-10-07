@@ -1,0 +1,30 @@
+services:
+
+  postgres:
+    image: postgres:16
+
+    environment:
+      POSTGRES_DB: it_asset_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ITProject@2026
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "5000:5000"
+
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:

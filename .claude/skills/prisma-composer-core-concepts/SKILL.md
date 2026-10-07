@@ -42,11 +42,11 @@ Two principles govern everything and are binding
 Everything you author is a declaration: plain data describing a piece of the
 app, executing nothing when imported. Three node kinds exist:
 
-| Kind | Declared with | Purpose |
-| --- | --- | --- |
-| Service | `compute()` | A running unit of your code; atomic, Composer sees only its ports |
-| Resource | `rawPostgres()`, `bucket()` | A stateful managed dependency |
-| Module | `module()` | A grouping boundary; runs no code of its own, exposes typed ports |
+| Kind     | Declared with               | Purpose                                                           |
+| -------- | --------------------------- | ----------------------------------------------------------------- |
+| Service  | `compute()`                 | A running unit of your code; atomic, Composer sees only its ports |
+| Resource | `rawPostgres()`, `bucket()` | A stateful managed dependency                                     |
+| Module   | `module()`                  | A grouping boundary; runs no code of its own, exposes typed ports |
 
 Nodes connect through **ports**: `deps` declares what a node requires,
 `expose` declares what it offers. Wiring happens in a Module's builder via
@@ -54,9 +54,9 @@ Nodes connect through **ports**: `deps` declares what a node requires,
 
 ```ts
 // module.ts
-import { module } from '@prisma/composer';
+import { module } from "@prisma/composer";
 
-export default module('store', ({ provision }) => {
+export default module("store", ({ provision }) => {
   const catalog = provision(catalogModule);
   provision(storefrontService, { deps: { catalog: catalog.rpc } });
 });
@@ -106,9 +106,9 @@ produces and the platform boots:
 ```ts
 // service.ts
 export default compute({
-  name: 'auth',
+  name: "auth",
   deps: { db: rawPostgres() },
-  build: node({ module: import.meta.url, entry: '../dist/server.mjs' }),
+  build: node({ module: import.meta.url, entry: "../dist/server.mjs" }),
   expose: { rpc: authContract },
 });
 
@@ -117,7 +117,7 @@ const { db } = service.load(); // { url }: you construct your own client
 const handler = serve(service, {
   rpc: { verify: async ({ token }) => ({ ok: token.length > 0 }) },
 });
-Bun.serve({ port: service.port(), hostname: '0.0.0.0', fetch: handler });
+Bun.serve({ port: service.port(), hostname: "0.0.0.0", fetch: handler });
 ```
 
 The consumer declares `deps: { auth: rpc(authContract) }` and gets a typed
@@ -125,9 +125,9 @@ client back from `load()`.
 
 ## Two channels: dependencies and input
 
-| The value is… | Declare | Provide | Read |
-| --- | --- | --- | --- |
-| produced by another node | `deps: { db: rawPostgres() }` | wire at `provision()` | `load()` |
+| The value is…                        | Declare                         | Provide                                                        | Read      |
+| ------------------------------------ | ------------------------------- | -------------------------------------------------------------- | --------- |
+| produced by another node             | `deps: { db: rawPostgres() }`   | wire at `provision()`                                          | `load()`  |
 | anything else (config or credential) | one field of the `input` schema | bind at `provision()`: literal, `envParam()`, or `envSecret()` | `input()` |
 
 The service declares its whole incoming configuration, plain values and
@@ -148,7 +148,7 @@ Rules that bite:
    a missing name (and the deploy fails early, naming the variable, when both
    lack it). Changing the platform value needs a redeploy.
 3. **Absence is the schema's call.** An env-bound field whose variable is
-   unset or empty resolves to *key omitted*, which is legal only if the
+   unset or empty resolves to _key omitted_, which is legal only if the
    schema allows it (optional field, union arm). The deploy report prints the
    serialized input document (secrets ride as `{"$secret":"VAR"}` pointers)
    and every key that resolved absent.
@@ -377,9 +377,9 @@ Cloud deployment and local apps without Postgres never load this runtime.
 A test is just another environment: one where you decide what `load()` and
 `input()` return, never by editing the code under test.
 
-| You want to… | Use | From |
-| --- | --- | --- |
-| Test a page / action / handler in isolation | `mockService` | `@prisma/composer/testing` |
+| You want to…                                               | Use                | From                                    |
+| ---------------------------------------------------------- | ------------------ | --------------------------------------- |
+| Test a page / action / handler in isolation                | `mockService`      | `@prisma/composer/testing`              |
 | Run the real boot + request path against a fake dependency | `bootstrapService` | `@prisma/composer-prisma-cloud/testing` |
 
 `mockService` returns a copy of the service whose `load()` yields your
@@ -412,13 +412,13 @@ contract.
 First-party Modules ship inside `@prisma/composer-prisma-cloud` and
 provision exactly like your own:
 
-| Import | What it provisions | Exposes |
-| --- | --- | --- |
-| `cron` from `/cron` | An always-on scheduler (it holds Compute's keep-awake guard) firing your schedule at your runner service; `input` on `cron()` binds the runner's input schema | nothing |
-| `storage` from `/storage` | An S3-backed blob store (own Postgres + minted credentials) | `store` |
-| `streams` from `/streams` | Durable append-only event streams over a `store` | `streams` |
-| `auth` from `/auth` | Signup, login, sessions, and JWT verification (Better Auth in one service, own database). `auth({ signUp: 'closed' })` makes Better Auth refuse self-service sign-up; operator-created accounts go through `admin.createUser({ email, name, password?, emailVerified? })` from a service wired to `admin` (it throws on a duplicate email and sends no mail); a signed-in user deletes their own account with Better Auth's `POST /api/auth/delete-user` through the proxy (password, or a session < 24 h old); operators delete with `admin.removeUser({ userId })`; either way your own rows follow your `auth:User` FK's `onDelete` (`Cascade` deletes them, `Restrict` refuses the deletion) | `api`, `session`, `admin` |
-| `email` from `/email` | Transactional email with a stored outbox (own service and database) | `send`, `outbox` |
+| Import                    | What it provisions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Exposes                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| `cron` from `/cron`       | An always-on scheduler (it holds Compute's keep-awake guard) firing your schedule at your runner service; `input` on `cron()` binds the runner's input schema                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | nothing                   |
+| `storage` from `/storage` | An S3-backed blob store (own Postgres + minted credentials)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `store`                   |
+| `streams` from `/streams` | Durable append-only event streams over a `store`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `streams`                 |
+| `auth` from `/auth`       | Signup, login, sessions, and JWT verification (Better Auth in one service, own database). `auth({ signUp: 'closed' })` makes Better Auth refuse self-service sign-up; operator-created accounts go through `admin.createUser({ email, name, password?, emailVerified? })` from a service wired to `admin` (it throws on a duplicate email and sends no mail); a signed-in user deletes their own account with Better Auth's `POST /api/auth/delete-user` through the proxy (password, or a session < 24 h old); operators delete with `admin.removeUser({ userId })`; either way your own rows follow your `auth:User` FK's `onDelete` (`Cascade` deletes them, `Restrict` refuses the deletion) | `api`, `session`, `admin` |
+| `email` from `/email`     | Transactional email with a stored outbox (own service and database)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `send`, `outbox`          |
 
 `bucket()` (imported alongside `rawPostgres`) is a raw S3-compatible bucket:
 the dependency end receives `{ url, bucket, accessKeyId, secretAccessKey }`,

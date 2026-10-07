@@ -1,24 +1,111 @@
-# IT Asset Management Backend
+# IT Asset Management System
 
-Backend API for managing IT assets and users.
+## Project Overview
+
+## Features
 
 ## Tech Stack
 
-- Node.js
-- Express
-- TypeScript
-- Prisma
-- PostgreSQL
-- JWT
+## Architecture
+
+## ERD Diagram
 
 ## Installation
 
-npm install
+## Environment Variables
 
-## Database Migration
+## Authentication Flow
 
-npx prisma migrate dev
+## Role Authorization
 
-## Run
+## API Endpoints
 
-npm run dev
+## Project Structure
+
+## Deployment Guide
+
+## Security Features
+
+## Logging
+
+## Project Status
+
+IT Asset Management System is a backend application designed to track and manage IT assets, users, assignments, and asset lifecycle operations.
+
+The system provides:
+
+- Secure authentication
+- Role-based authorization
+- Asset tracking
+- Assignment history
+- Dashboard statistics
+- Request validation
+- API documentation
+- Logging and monitoring
+
+### Features
+
+#### Authentication
+
+- User Registration
+- User Login
+- JWT Authentication
+- Protected Routes
+
+#### Authorization
+
+Supported Roles:
+
+- ADMIN
+- IT_ENGINEER
+- IT_SUPPORT
+- EMPLOYEE
+
+#### Asset Management
+
+- Create Asset
+- Read Asset
+- Update Asset
+- Delete Asset
+
+#### Assignment Management
+
+- Assign Asset
+- Return Asset
+- Assignment History
+
+#### Dashboard
+
+- Total Users
+- Total Assets
+- Available Assets
+- Assigned Assets
+
+### Tech Stack
+
+Backend:
+
+- Node.js
+- Express.js
+- TypeScript
+
+Database:
+
+- PostgreSQL
+- Prisma ORM
+
+Security:
+
+- JWT
+- bcryptjs
+- Helmet
+- Express Rate Limit
+
+Validation:
+
+- Zod
+
+Documentation:
+
+- Swagger UI
+- Swagger JSDoc

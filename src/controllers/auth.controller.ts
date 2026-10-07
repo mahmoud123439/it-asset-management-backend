@@ -5,10 +5,7 @@ import { prisma } from "../prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-export const register = async (
-  req: Request,
-  res: Response
-) => {
+export const register = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -45,10 +42,7 @@ export const register = async (
   }
 };
 
-export const login = async (
-  req: Request,
-  res: Response
-) => {
+export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -64,10 +58,7 @@ export const login = async (
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -83,7 +74,7 @@ export const login = async (
       JWT_SECRET,
       {
         expiresIn: "1d",
-      }
+      },
     );
 
     return res.json({
@@ -95,7 +86,3 @@ export const login = async (
     });
   }
 };
-
-
-
-

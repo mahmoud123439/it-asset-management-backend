@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 export const authMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const authHeader = req.headers.authorization;
@@ -25,10 +25,7 @@ export const authMiddleware = (
       });
     }
 
-    const decoded = jwt.verify(
-      token,
-      JWT_SECRET
-    );
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     (req as any).user = decoded;
 
@@ -39,7 +36,3 @@ export const authMiddleware = (
     });
   }
 };
-
-
-
-

@@ -89,6 +89,3 @@ export const deleteAsset = async (req: Request, res: Response) => {
     });
   }
 };
-
-
-
