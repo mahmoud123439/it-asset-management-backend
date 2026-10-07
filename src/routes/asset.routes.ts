@@ -16,3 +16,6 @@ router.put("/:id", updateAsset);
 router.delete("/:id", deleteAsset);
 
 export default router;
+
+
+
