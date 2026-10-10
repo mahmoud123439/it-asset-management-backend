@@ -20,11 +20,11 @@ services:
     depends_on:
       - postgres
 
-    ports:
-      - "5000:5000"
-
     env_file:
       - .env
+
+    ports:
+      - "5000:5000"
 
 volumes:
   postgres_data:

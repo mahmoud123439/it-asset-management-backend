@@ -5,7 +5,6 @@
     "main":  "index.js",
     "scripts":  {
                     "dev":  "ts-node-dev --respawn src/server.ts",
-                    "postinstall":  "prisma skills sync || exit 0",
                     "test":  "jest"
                 },
     "keywords":  [

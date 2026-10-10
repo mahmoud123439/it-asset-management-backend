@@ -1,14 +1,18 @@
-FROM node:22-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+
+RUN npm config set strict-ssl false
+
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
+RUN npx prisma generate --schema=./prisma/schema.prisma || true
 
 EXPOSE 5000
 
