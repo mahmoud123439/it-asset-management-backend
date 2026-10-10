@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  IT_ENGINEER
+  IT_SUPPORT
+  EMPLOYEE
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  RETIRED
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  users User[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  role         UserRole @default(EMPLOYEE)
+  departmentId Int?
+
+  createdAt DateTime @default(now())
+
+  department  Department?       @relation(fields: [departmentId], references: [id])
+  assignments AssetAssignment[]
+}
+
+model Asset {
+  id           Int         @id @default(autoincrement())
+  name         String
+  serialNumber String      @unique
+  category     String
+  status       AssetStatus @default(AVAILABLE)
+
+  createdAt DateTime @default(now())
+
+  assignments AssetAssignment[]
+}
+
+model AssetAssignment {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  assetId    Int
+  assignedAt DateTime  @default(now())
+  returnedAt DateTime?
+
+  user  User  @relation(fields: [userId], references: [id])
+  asset Asset @relation(fields: [assetId], references: [id])
+}
