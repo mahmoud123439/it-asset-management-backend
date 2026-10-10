@@ -109,3 +109,64 @@ Documentation:
 
 - Swagger UI
 - Swagger JSDoc
+
+## Architecture Diagram
+
+Client
+   |
+   v
+Express API
+   |
+   v
+Controllers
+   |
+   v
+Prisma ORM
+   |
+   v
+PostgreSQL
+
+
+## Database ERD
+
+Department (1)
+      |
+      |----< User (*)
+
+User (1)
+      |
+      |----< AssetAssignment (*)
+
+Asset (1)
+      |
+      |----< AssetAssignment (*)
+
+
+## Docker Deployment Diagram
+
+Docker Desktop
+      |
+      |
+Backend Container
+(Node.js + Express)
+      |
+      |
+PostgreSQL Container
+
+
+## Authentication Flow
+
+Register
+   |
+Hash Password
+   |
+Store User
+
+Login
+   |
+Verify Password
+   |
+Generate JWT
+   |
+Access Protected Routes
+

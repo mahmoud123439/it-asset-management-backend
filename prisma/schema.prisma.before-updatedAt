@@ -24,10 +24,7 @@ enum AssetStatus {
 model Department {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-
   createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
-  deletedAt DateTime?
 
   users User[]
 }
@@ -40,13 +37,9 @@ model User {
   departmentId Int?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
-  deletedAt DateTime?
 
   department  Department?       @relation(fields: [departmentId], references: [id])
   assignments AssetAssignment[]
-
-  @@index([role])
 }
 
 model Asset {
@@ -57,13 +50,8 @@ model Asset {
   status       AssetStatus @default(AVAILABLE)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
-  deletedAt DateTime?
 
   assignments AssetAssignment[]
-
-  @@index([status])
-  @@index([category])
 }
 
 model AssetAssignment {
@@ -75,7 +63,4 @@ model AssetAssignment {
 
   user  User  @relation(fields: [userId], references: [id])
   asset Asset @relation(fields: [assetId], references: [id])
-
-  @@index([userId])
-  @@index([assetId])
 }
