@@ -1,0 +1,75 @@
+name: Project CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/**"
+      - "README.md"
+      - ".gitignore"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/**"
+      - "README.md"
+      - ".gitignore"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test -- --runInBand
+
+      - name: Prisma Validate
+        run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/it_asset_management
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
