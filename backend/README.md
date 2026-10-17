@@ -41,6 +41,7 @@ With Docker: `docker compose up --build` (needs a `.env` file; the container rea
 |---|---|---|
 | `DATABASE_URL` | yes | PostgreSQL connection string (URL-encode special characters in the password) |
 | `JWT_SECRET` | yes | Long random secret used to sign tokens |
+| `FRONTEND_ORIGINS` | no | Comma-separated exact browser origins allowed by CORS; set the production frontend HTTPS origin when deployed |
 | `PORT` | no | Defaults to `5000` |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | only for `seed:admin` | Password must be at least 8 characters |
 | `ADMIN_RESET_PASSWORD` | optional for `seed:admin` | Set to `true` to also reset the password when promoting an existing user; defaults to leaving it unchanged |

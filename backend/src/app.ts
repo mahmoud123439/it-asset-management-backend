@@ -19,6 +19,15 @@ import { authMiddleware } from "./middlewares/auth.middleware";
 import { errorHandler } from "./middlewares/error.middleware";
 
 const app = express();
+const allowedOrigins = new Set(
+  (
+    process.env.FRONTEND_ORIGINS ??
+    "https://smart-it.local:5174,https://127.0.0.1:5174,http://127.0.0.1:5173"
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -31,7 +40,13 @@ const limiter = rateLimit({
 app.use(helmet());
 app.use(morgan("combined"));
 app.use(limiter);
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      callback(null, !origin || allowedOrigins.has(origin));
+    },
+  }),
+);
 app.use(express.json());
 
 app.use(

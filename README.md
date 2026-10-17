@@ -42,6 +42,10 @@ npm run install:all
 
 See [backend/README.md](backend/README.md) for API configuration and administration, and [frontend/README.md](frontend/README.md) for HTTPS details.
 
+## Hosting
+
+The monorepo can be imported into Vercel as two projects using the same GitHub repository: set the backend project's root directory to `backend` and the frontend project's root directory to `frontend`. Configure the frontend's `VITE_API_URL` to the deployed backend HTTPS origin and set the backend's `FRONTEND_ORIGINS` to the deployed frontend HTTPS origin. The API also requires `DATABASE_URL` pointing to a separately hosted PostgreSQL database and a strong, unique `JWT_SECRET`; do not use the local `.env` file or local database as a production service.
+
 ## Build and test
 
 Run both production builds and the backend integration tests from the repository root:
