@@ -7,6 +7,9 @@
 **/*.tsbuildinfo
 **/logs/*.log
 **/certificates/
+**/*.crt
+**/*.cer
+**/*.p7b
 **/*.key
 **/*.pem
 **/*.pfx

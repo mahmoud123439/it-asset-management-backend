@@ -17,7 +17,7 @@ npm run install:all
 
 ## Configure and start
 
-1. Copy `backend/.env.example` to `backend/.env` and set the database URL and JWT secret.
+1. Copy `backend/.env.example` to `backend/.env` and set strong, unique values for the database password, JWT secret, and administrator password. The example intentionally leaves secrets blank; do not use placeholder or default passwords.
 2. Start PostgreSQL and apply the backend migrations. For Docker, run `docker compose -f backend/docker-compose.yml up --build` from the repository root. For an existing PostgreSQL server, run:
 
    ```powershell
