@@ -1,0 +1,2 @@
+ALTER TABLE "Asset"
+ADD COLUMN "softwareLicenses" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

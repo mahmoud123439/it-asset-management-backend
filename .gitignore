@@ -1,4 +1,12 @@
-node_modules/
-.env
-dist/
-coverage/
+**/node_modules/
+**/dist/
+**/coverage/
+**/.env
+**/.env.*
+!**/.env.example
+**/*.tsbuildinfo
+**/certificates/
+**/*.key
+**/*.pem
+**/*.pfx
+**/*.p12

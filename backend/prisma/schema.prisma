@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  IT_ENGINEER
+  IT_SUPPORT
+  MANAGER
+  EMPLOYEE
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  RETIRED
+}
+
+enum DeviceRequestType {
+  REPLACE_DEVICE
+  UPGRADE_HARDWARE
+  OTHER
+}
+
+enum DeviceRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model Department {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  users User[]
+}
+
+model User {
+  id                          Int      @id @default(autoincrement())
+  email                       String   @unique
+  password                    String
+  role                        UserRole @default(EMPLOYEE)
+  employeeName                String?
+  jobTitle                    String?
+  departmentId                Int?
+  microsoft365LicenseAssigned Boolean  @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  department             Department?           @relation(fields: [departmentId], references: [id])
+  assignments            AssetAssignment[]     @relation("AssignmentRecipient")
+  issuedAssignments      AssetAssignment[]     @relation("AssignmentIssuer")
+  workGroups             UserWorkGroup[]
+  deviceRequests         DeviceChangeRequest[] @relation("DeviceRequestOwner")
+  reviewedDeviceRequests DeviceChangeRequest[] @relation("DeviceRequestReviewer")
+
+  @@index([role])
+}
+
+model Asset {
+  id                     Int         @id @default(autoincrement())
+  name                   String
+  serialNumber           String      @unique
+  category               String
+  status                 AssetStatus @default(AVAILABLE)
+  manufacturer           String?
+  model                  String?
+  processor              String?
+  memoryGb               Float?
+  storageGb              Int?
+  storageType            String?
+  operatingSystem        String?
+  windowsEdition         String?
+  windowsLicenseAssigned Boolean     @default(false)
+  antivirusProduct       String?
+  softwareLicenses       String[]    @default([])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  deletedAt DateTime?
+
+  assignments    AssetAssignment[]
+  deviceRequests DeviceChangeRequest[]
+
+  @@index([status])
+  @@index([category])
+}
+
+model WorkGroup {
+  id        Int             @id @default(autoincrement())
+  slug      String          @unique
+  name      String
+  users     UserWorkGroup[]
+  createdAt DateTime        @default(now())
+}
+
+model UserWorkGroup {
+  userId  Int
+  groupId Int
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   WorkGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@index([groupId])
+}
+
+model AssetAssignment {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  assetId        Int
+  issuedByUserId Int?
+  issuedByName   String?
+  assignedAt     DateTime  @default(now())
+  returnedAt     DateTime?
+
+  user     User  @relation("AssignmentRecipient", fields: [userId], references: [id])
+  asset    Asset @relation(fields: [assetId], references: [id])
+  issuedBy User? @relation("AssignmentIssuer", fields: [issuedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([assetId])
+  @@index([issuedByUserId])
+}
+
+model DeviceChangeRequest {
+  id             Int                 @id @default(autoincrement())
+  userId         Int
+  assetId        Int?
+  type           DeviceRequestType
+  message        String
+  status         DeviceRequestStatus @default(PENDING)
+  resolutionNote String?
+  reviewedById   Int?
+  reviewedAt     DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime?           @updatedAt
+
+  user       User   @relation("DeviceRequestOwner", fields: [userId], references: [id], onDelete: Cascade)
+  asset      Asset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  reviewedBy User?  @relation("DeviceRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
