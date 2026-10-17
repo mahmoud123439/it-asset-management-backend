@@ -1,0 +1,17 @@
+{
+  "name": "it-asset-management",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:backend": "npm ci --prefix backend",
+    "install:frontend": "npm ci --prefix frontend",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "setup:https": "npm --prefix frontend run setup:https",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test": "npm --prefix backend test -- --runInBand"
+  }
+}

@@ -5,6 +5,7 @@
 **/.env.*
 !**/.env.example
 **/*.tsbuildinfo
+**/logs/*.log
 **/certificates/
 **/*.key
 **/*.pem

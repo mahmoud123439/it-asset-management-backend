@@ -1,35 +1,54 @@
 # IT Asset Management
 
-The application is maintained as one GitHub repository with the backend API and frontend UI in separate folders:
+This repository contains the complete application in two independent project folders:
 
-- `backend/` — Node.js, TypeScript, Express, and Prisma API.
-- `frontend/` — React and Vite web application.
-
-## Development
-
-Install dependencies in each application directory:
-
-```powershell
-Set-Location backend
-npm ci
+```text
+backend/    Express API, PostgreSQL/Prisma schema, migrations, and tests
+frontend/   React/Vite web application
 ```
 
+Run the commands below from this repository's root directory.
+
+## Install
+
 ```powershell
-Set-Location ..\frontend
-npm ci
+npm run install:all
 ```
 
-Follow each folder's README for environment configuration and startup instructions. The frontend README includes the local HTTPS setup.
+## Configure and start
 
-## Validation
+1. Copy `backend/.env.example` to `backend/.env` and set the database URL and JWT secret.
+2. Start PostgreSQL and apply the backend migrations. For Docker, run `docker compose -f backend/docker-compose.yml up --build` from the repository root. For an existing PostgreSQL server, run:
 
-Run the backend build and tests from `backend/`, and the frontend production build from `frontend/`:
+   ```powershell
+   Push-Location backend
+   npx prisma migrate deploy
+   Pop-Location
+   ```
+3. In one terminal, start the API:
+
+   ```powershell
+   npm run dev:backend
+   ```
+
+4. On Windows, set up the local HTTPS certificate once, then start the frontend in another terminal:
+
+   ```powershell
+   npm run setup:https
+   npm run dev:frontend
+   ```
+
+5. Open `https://127.0.0.1:5174/`. Vite proxies `/api` requests to the backend at `http://localhost:5000`.
+
+See [backend/README.md](backend/README.md) for API configuration and administration, and [frontend/README.md](frontend/README.md) for HTTPS details.
+
+## Build and test
+
+Run both production builds and the backend integration tests from the repository root:
 
 ```powershell
 npm run build
-npm test -- --runInBand
+npm test
 ```
 
-```powershell
-npm run build
-```
+The backend tests require PostgreSQL to be available via `DATABASE_URL`.
