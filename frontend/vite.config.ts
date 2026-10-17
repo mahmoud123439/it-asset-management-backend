@@ -8,8 +8,8 @@ const certificateDirectory = path.join(
   "it-asset-management",
   "certificates",
 );
-const certificatePath = path.join(certificateDirectory, "127.0.0.1.crt");
-const privateKeyPath = path.join(certificateDirectory, "127.0.0.1.key");
+const certificatePath = path.join(certificateDirectory, "smart-it.local.crt");
+const privateKeyPath = path.join(certificateDirectory, "smart-it.local.key");
 
 if (!fs.existsSync(certificatePath) || !fs.existsSync(privateKeyPath)) {
   throw new Error(
@@ -20,6 +20,7 @@ if (!fs.existsSync(certificatePath) || !fs.existsSync(privateKeyPath)) {
 export default defineConfig({
   server: {
     host: "127.0.0.1",
+    allowedHosts: ["smart-it.local"],
     port: 5174,
     strictPort: true,
     https: {
@@ -28,7 +29,7 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://127.0.0.1:5000",
         changeOrigin: true,
       },
     },

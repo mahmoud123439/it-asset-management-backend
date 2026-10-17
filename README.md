@@ -38,7 +38,7 @@ npm run install:all
    npm run dev:frontend
    ```
 
-5. Open `https://127.0.0.1:5174/`. Vite proxies `/api` requests to the backend at `http://127.0.0.1:5000`. Both local development servers are restricted to loopback; do not expose them directly to the internet.
+5. Map `smart-it.local` to `127.0.0.1` in the Windows hosts file, run `npm run setup:https`, then open `https://smart-it.local:5174/`. Vite proxies `/api` requests to the backend at `http://127.0.0.1:5000`. Both local development servers are restricted to loopback; do not expose them directly to the internet.
 
 See [backend/README.md](backend/README.md) for API configuration and administration, and [frontend/README.md](frontend/README.md) for HTTPS details.
 

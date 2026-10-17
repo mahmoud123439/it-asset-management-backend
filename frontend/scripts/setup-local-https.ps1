@@ -1,28 +1,33 @@
 $ErrorActionPreference = "Stop"
 
-$friendlyName = "IT Asset Management Local HTTPS"
+$hostname = "smart-it.local"
+$friendlyName = "IT Asset Management Local HTTPS ($hostname)"
 $certificateDirectory = Join-Path $env:LOCALAPPDATA "it-asset-management\certificates"
-$certificatePath = Join-Path $certificateDirectory "127.0.0.1.crt"
-$privateKeyPath = Join-Path $certificateDirectory "127.0.0.1.key"
+$certificatePath = Join-Path $certificateDirectory "$hostname.crt"
+$privateKeyPath = Join-Path $certificateDirectory "$hostname.key"
 $currentUserStore = [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser
 $personalStore = [System.Security.Cryptography.X509Certificates.X509Store]::new("My", $currentUserStore)
 $trustedRootStore = [System.Security.Cryptography.X509Certificates.X509Store]::new("Root", $currentUserStore)
 
 New-Item -ItemType Directory -Path $certificateDirectory -Force | Out-Null
 
-$directoryAcl = [System.Security.AccessControl.DirectorySecurity]::new()
-$directoryAcl.SetAccessRuleProtection($true, $false)
 $currentUserSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
-$directoryAcl.SetOwner($currentUserSid)
-$directoryRule = [System.Security.AccessControl.FileSystemAccessRule]::new(
-    $currentUserSid,
-    [System.Security.AccessControl.FileSystemRights]::FullControl,
-    [System.Security.AccessControl.InheritanceFlags]::ContainerInherit -bor [System.Security.AccessControl.InheritanceFlags]::ObjectInherit,
-    [System.Security.AccessControl.PropagationFlags]::None,
-    [System.Security.AccessControl.AccessControlType]::Allow
-)
-$directoryAcl.AddAccessRule($directoryRule)
-Set-Acl -LiteralPath $certificateDirectory -AclObject $directoryAcl
+$directoryAcl = Get-Acl -LiteralPath $certificateDirectory
+$hasRestrictedAcl = $directoryAcl.AreAccessRulesProtected -and @(
+    $directoryAcl.Access | Where-Object {
+        -not $_.IsInherited -and
+        $_.IdentityReference -eq $currentUserSid -and
+        $_.AccessControlType -eq [System.Security.AccessControl.AccessControlType]::Allow -and
+        $_.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::FullControl
+    }
+).Count -eq 1 -and @($directoryAcl.Access).Count -eq 1
+
+if (-not $hasRestrictedAcl) {
+    & icacls.exe $certificateDirectory /inheritance:r /grant:r "*$($currentUserSid.Value):(OI)(CI)F" | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not restrict permissions on the local certificate directory."
+    }
+}
 
 $personalStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
 $trustedRootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
@@ -35,8 +40,8 @@ try {
     }
 
     $certificate = New-SelfSignedCertificate `
-        -Subject "CN=127.0.0.1" `
-        -TextExtension @("2.5.29.17={text}DNS=localhost&IPAddress=127.0.0.1") `
+        -Subject "CN=$hostname" `
+        -TextExtension @("2.5.29.17={text}DNS=$hostname&DNS=localhost&IPAddress=127.0.0.1") `
         -Type SSLServerAuthentication `
         -KeyAlgorithm RSA `
         -KeyLength 2048 `
@@ -76,4 +81,5 @@ finally {
 }
 
 Write-Output "Local HTTPS certificate created and trusted for the current Windows user."
-Write-Output "Start the frontend with npm run dev, then open https://127.0.0.1:5174/."
+Write-Output "Add 127.0.0.1 $hostname to the Windows hosts file if it is not already present."
+Write-Output "Start the frontend with npm run dev, then open https://$hostname`:5174/."
