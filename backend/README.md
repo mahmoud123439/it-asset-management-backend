@@ -33,7 +33,7 @@ npm run seed:admin          # provisions the IT administrator from ADMIN_EMAIL /
 npm run dev                 # http://localhost:5000
 ```
 
-With Docker: `docker compose up --build` (needs a `.env` file; the container reads it via `env_file`). Before starting, set non-empty, strong, unique values for `POSTGRES_PASSWORD` and `JWT_SECRET` in `.env`; use a password manager or cryptographically secure generator. The example intentionally leaves secrets blank, and Compose refuses to start without a database password. PostgreSQL's host port is bound to `127.0.0.1` only; other devices cannot connect through that published port.
+With Docker: `docker compose up --build` (needs a `.env` file; the container reads it via `env_file`). Before starting, set non-empty, strong, unique values for `POSTGRES_PASSWORD` and `JWT_SECRET` in `.env`; use a password manager or cryptographically secure generator. The example intentionally leaves secrets blank, and Compose refuses to start without a database password. The API and PostgreSQL ports are published on `127.0.0.1` only; other devices cannot connect through those host ports. When run directly with `npm run dev`, the API also binds to `127.0.0.1` by default. For a production deployment, place the API behind a properly configured HTTPS reverse proxy rather than exposing the development server.
 
 ### Environment variables
 

@@ -18,7 +18,7 @@ npm run install:all
 ## Configure and start
 
 1. Copy `backend/.env.example` to `backend/.env` and set strong, unique values for the database password, JWT secret, and administrator password. The example intentionally leaves secrets blank; do not use placeholder or default passwords.
-2. Start PostgreSQL and apply the backend migrations. For Docker, run `docker compose -f backend/docker-compose.yml up --build` from the repository root. For an existing PostgreSQL server, run:
+2. Start PostgreSQL and apply the backend migrations. For Docker, run `docker compose -f backend/docker-compose.yml up --build` from the repository root. For an existing local PostgreSQL server, ensure it listens only on loopback, then run:
 
    ```powershell
    Push-Location backend
@@ -38,7 +38,7 @@ npm run install:all
    npm run dev:frontend
    ```
 
-5. Open `https://127.0.0.1:5174/`. Vite proxies `/api` requests to the backend at `http://localhost:5000`.
+5. Open `https://127.0.0.1:5174/`. Vite proxies `/api` requests to the backend at `http://127.0.0.1:5000`. Both local development servers are restricted to loopback; do not expose them directly to the internet.
 
 See [backend/README.md](backend/README.md) for API configuration and administration, and [frontend/README.md](frontend/README.md) for HTTPS details.
 

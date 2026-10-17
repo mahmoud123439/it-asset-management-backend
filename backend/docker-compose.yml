@@ -33,9 +33,10 @@ services:
     environment:
       # Inside the compose network the database host is "postgres", not localhost.
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/it_asset_management
+      HOST: 0.0.0.0
 
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
 
 volumes:
   postgres_data:
