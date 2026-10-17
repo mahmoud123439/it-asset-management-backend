@@ -7,7 +7,17 @@ const options = {
       title: "IT Asset Management API",
       version: "1.0.0",
       description: "IT Asset Management System API"
-    }
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    },
+    security: [{ bearerAuth: [] }]
   },
   apis: ["src/routes/*.ts"]
 };

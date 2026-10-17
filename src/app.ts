@@ -10,6 +10,7 @@ import userRoutes from "./routes/user.routes";
 import assetRoutes from "./routes/asset.routes";
 import assignmentRoutes from "./routes/assignment.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
+import departmentRoutes from "./routes/department.routes";
 
 import { swaggerSpec } from "./swagger";
 import { authMiddleware } from "./middlewares/auth.middleware";
@@ -46,6 +47,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 
 app.use("/api/users", authMiddleware, userRoutes);
+app.use("/api/departments", authMiddleware, departmentRoutes);
 app.use("/api/assets", authMiddleware, assetRoutes);
 app.use("/api/assignments", authMiddleware, assignmentRoutes);
 app.use("/api/dashboard", authMiddleware, dashboardRoutes);

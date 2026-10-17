@@ -86,3 +86,34 @@ export const login = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: Number(userId),
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        department: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    return res.json(user);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch current user",
+    });
+  }
+};
