@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: it_asset_management
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ITProject@2026
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
 
     ports:
       - "5432:5432"
@@ -14,14 +14,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d it_asset_management"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: .
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
     env_file:
       - .env
+
+    environment:
+      # Inside the compose network the database host is "postgres", not localhost.
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/it_asset_management
 
     ports:
       - "5000:5000"

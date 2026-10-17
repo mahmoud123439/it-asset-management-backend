@@ -2,9 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-ENV NODE_TLS_REJECT_UNAUTHORIZED=0
-
-RUN npm config set strict-ssl false
+# Prisma needs OpenSSL on Alpine
+RUN apk add --no-cache openssl
 
 COPY package*.json ./
 
@@ -12,8 +11,9 @@ RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate --schema=./prisma/schema.prisma || true
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 EXPOSE 5000
 
-CMD ["npm","run","dev"]
+# Apply pending migrations, then start the dev server
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
