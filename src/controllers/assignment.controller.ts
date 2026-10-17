@@ -1,34 +1,55 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
+import { HttpError, handleError } from "../utils/errors";
+import { buildMeta, parseQuery } from "../utils/query";
+import { assignmentQuerySchema } from "../validations/assignment.validation";
 
 export const getAssignments = async (req: Request, res: Response) => {
   try {
-    const assignments = await prisma.assetAssignment.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-        asset: {
-          select: {
-            id: true,
-            name: true,
-            serialNumber: true,
-          },
-        },
-      },
-      orderBy: {
-        assignedAt: "desc",
-      },
-    });
+    const query = parseQuery(assignmentQuerySchema, req.query, res);
 
-    res.json(assignments);
+    if (!query) return;
+
+    const { page, limit, userId, assetId, active } = query;
+
+    const where: Prisma.AssetAssignmentWhereInput = {};
+
+    if (userId) where.userId = userId;
+    if (assetId) where.assetId = assetId;
+    if (active === "true") where.returnedAt = null;
+    if (active === "false") where.returnedAt = { not: null };
+
+    const [data, total] = await prisma.$transaction([
+      prisma.assetAssignment.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+          asset: {
+            select: {
+              id: true,
+              name: true,
+              serialNumber: true,
+            },
+          },
+        },
+        orderBy: {
+          assignedAt: "desc",
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.assetAssignment.count({ where }),
+    ]);
+
+    res.json({ data, meta: buildMeta(page, limit, total) });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to fetch assignments",
-    });
+    handleError(error, res, "Failed to fetch assignments");
   }
 };
 
@@ -36,45 +57,47 @@ export const assignAsset = async (req: Request, res: Response) => {
   try {
     const { userId, assetId } = req.body;
 
-    const asset = await prisma.asset.findUnique({
-      where: {
-        id: assetId,
-      },
-    });
-
-    if (!asset) {
-      return res.status(404).json({
-        message: "Asset not found",
+    const assignment = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true },
       });
-    }
 
-    if (asset.status !== "AVAILABLE") {
-      return res.status(400).json({
-        message: "Asset is not available",
+      if (!user) {
+        throw new HttpError(404, "User not found");
+      }
+
+      const asset = await tx.asset.findUnique({
+        where: { id: assetId },
+        select: { id: true },
       });
-    }
 
-    const assignment = await prisma.assetAssignment.create({
-      data: {
-        userId,
-        assetId,
-      },
-    });
+      if (!asset) {
+        throw new HttpError(404, "Asset not found");
+      }
 
-    await prisma.asset.update({
-      where: {
-        id: assetId,
-      },
-      data: {
-        status: "ASSIGNED",
-      },
+      // Atomic guard: only flips AVAILABLE -> ASSIGNED, so two concurrent
+      // requests cannot assign the same asset twice.
+      const updated = await tx.asset.updateMany({
+        where: { id: assetId, status: "AVAILABLE" },
+        data: { status: "ASSIGNED" },
+      });
+
+      if (updated.count === 0) {
+        throw new HttpError(400, "Asset is not available");
+      }
+
+      return tx.assetAssignment.create({
+        data: {
+          userId,
+          assetId,
+        },
+      });
     });
 
     res.status(201).json(assignment);
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to assign asset",
-    });
+    handleError(error, res, "Failed to assign asset");
   }
 };
 
@@ -82,46 +105,44 @@ export const returnAsset = async (req: Request, res: Response) => {
   try {
     const { assetId } = req.body;
 
-    const assignment = await prisma.assetAssignment.findFirst({
-      where: {
-        assetId,
-        returnedAt: null,
-      },
-      orderBy: {
-        assignedAt: "desc",
-      },
-    });
-
-    if (!assignment) {
-      return res.status(404).json({
-        message: "Active assignment not found",
+    await prisma.$transaction(async (tx) => {
+      const assignment = await tx.assetAssignment.findFirst({
+        where: {
+          assetId,
+          returnedAt: null,
+        },
+        orderBy: {
+          assignedAt: "desc",
+        },
       });
-    }
 
-    await prisma.assetAssignment.update({
-      where: {
-        id: assignment.id,
-      },
-      data: {
-        returnedAt: new Date(),
-      },
-    });
+      if (!assignment) {
+        throw new HttpError(404, "Active assignment not found");
+      }
 
-    await prisma.asset.update({
-      where: {
-        id: assetId,
-      },
-      data: {
-        status: "AVAILABLE",
-      },
+      await tx.assetAssignment.update({
+        where: {
+          id: assignment.id,
+        },
+        data: {
+          returnedAt: new Date(),
+        },
+      });
+
+      await tx.asset.update({
+        where: {
+          id: assetId,
+        },
+        data: {
+          status: "AVAILABLE",
+        },
+      });
     });
 
     res.json({
       message: "Asset returned successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to return asset",
-    });
+    handleError(error, res, "Failed to return asset");
   }
 };

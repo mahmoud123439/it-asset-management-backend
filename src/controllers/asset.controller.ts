@@ -1,13 +1,46 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
+import { HttpError, handleError } from "../utils/errors";
+import { buildMeta, parseId, parseQuery } from "../utils/query";
+import { assetQuerySchema } from "../validations/asset.validation";
 
 export const getAssets = async (req: Request, res: Response) => {
   try {
-    const assets = await prisma.asset.findMany();
+    const query = parseQuery(assetQuerySchema, req.query, res);
 
-    res.json(assets);
+    if (!query) return;
+
+    const { page, limit, search, status, category, sortBy, order } = query;
+
+    const where: Prisma.AssetWhereInput = {};
+
+    if (status) where.status = status;
+
+    if (category) {
+      where.category = { equals: category, mode: "insensitive" };
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { serialNumber: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const [data, total] = await prisma.$transaction([
+      prisma.asset.findMany({
+        where,
+        orderBy: { [sortBy]: order } as Prisma.AssetOrderByWithRelationInput,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.asset.count({ where }),
+    ]);
+
+    res.json({ data, meta: buildMeta(page, limit, total) });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch assets" });
+    handleError(error, res, "Failed to fetch assets");
   }
 };
 
@@ -15,7 +48,7 @@ export const getAssetById = async (req: Request, res: Response) => {
   try {
     const asset = await prisma.asset.findUnique({
       where: {
-        id: Number(req.params.id),
+        id: parseId(req.params.id),
       },
     });
 
@@ -27,7 +60,7 @@ export const getAssetById = async (req: Request, res: Response) => {
 
     res.json(asset);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch asset" });
+    handleError(error, res, "Failed to fetch asset");
   }
 };
 
@@ -46,18 +79,41 @@ export const createAsset = async (req: Request, res: Response) => {
 
     res.status(201).json(asset);
   } catch (error) {
-    res.status(500).json({ message: "Failed to create asset" });
+    handleError(error, res, "Failed to create asset", {
+      unique: "An asset with this serial number already exists",
+    });
   }
 };
 
 export const updateAsset = async (req: Request, res: Response) => {
   try {
+    const id = parseId(req.params.id);
     const { name, serialNumber, category, status } = req.body;
 
+    const existing = await prisma.asset.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new HttpError(404, "Asset not found");
+    }
+
+    if (existing.status === "ASSIGNED" && status !== "ASSIGNED") {
+      throw new HttpError(
+        400,
+        "Asset is currently assigned. Return it before changing its status",
+      );
+    }
+
+    if (existing.status !== "ASSIGNED" && status === "ASSIGNED") {
+      throw new HttpError(
+        400,
+        "Status ASSIGNED can only be set by assigning the asset to a user",
+      );
+    }
+
     const asset = await prisma.asset.update({
-      where: {
-        id: Number(req.params.id),
-      },
+      where: { id },
       data: {
         name,
         serialNumber,
@@ -68,24 +124,44 @@ export const updateAsset = async (req: Request, res: Response) => {
 
     res.json(asset);
   } catch (error) {
-    res.status(500).json({ message: "Failed to update asset" });
+    handleError(error, res, "Failed to update asset", {
+      unique: "An asset with this serial number already exists",
+      notFound: "Asset not found",
+    });
   }
 };
 
 export const deleteAsset = async (req: Request, res: Response) => {
   try {
+    const id = parseId(req.params.id);
+
+    const existing = await prisma.asset.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!existing) {
+      throw new HttpError(404, "Asset not found");
+    }
+
+    if (existing.status === "ASSIGNED") {
+      throw new HttpError(
+        409,
+        "Cannot delete an asset that is currently assigned",
+      );
+    }
+
     await prisma.asset.delete({
-      where: {
-        id: Number(req.params.id),
-      },
+      where: { id },
     });
 
     res.json({
       message: "Asset deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to delete asset",
+    handleError(error, res, "Failed to delete asset", {
+      notFound: "Asset not found",
+      foreignKey: "Cannot delete an asset that has assignment history",
     });
   }
 };
