@@ -1,30 +1,49 @@
 services:
-
   postgres:
-    image: postgres:16
-
+    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: it_asset_management
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ITProject@2026
-
-    ports:
-      - "5432:5432"
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+      POSTGRES_USER: ${POSTGRES_USER:-assetflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-assetflow_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-assetflow}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-assetflow} -d ${POSTGRES_DB:-assetflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports: ["1025:1025", "8025:8025"]
   backend:
-    build: .
-
+    build: ./backend
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-assetflow}:${POSTGRES_PASSWORD:-assetflow_dev}@postgres:5432/${POSTGRES_DB:-assetflow}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-change-me-please-123456}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-me-please-123456}
+      LICENSE_ENCRYPTION_KEY: ${LICENSE_ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      API_URL: ${API_URL:-http://localhost:3000}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM:-assetflow@company.local}
+      UPLOAD_DIR: /app/uploads
+      NODE_ENV: production
+    ports: ["3000:3000"]
+    volumes: ["uploads:/app/uploads"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     depends_on:
-      - postgres
-
-    env_file:
-      - .env
-
-    ports:
-      - "5000:5000"
-
+      postgres: {condition: service_healthy}
+      mailhog: {condition: service_started}
+  frontend:
+    build: ./frontend
+    ports: ["8080:80"]
+    depends_on:
+      backend: {condition: service_healthy}
 volumes:
-  postgres_data:
+  pgdata:
+  uploads:

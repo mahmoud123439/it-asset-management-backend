@@ -1,33 +1,17 @@
-name: Backend CI
-
+name: CI
 on:
   push:
-    branches:
-      - main
-
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: TypeScript Check
-        run: npx tsc --noEmit
-
-      - name: Prisma Validate
-        run: npx prisma validate
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npm run build
+      - run: docker compose config

@@ -1,4 +1,8 @@
-node_modules/
+node_modules
+dist
 .env
-dist/
-coverage/
+uploads/*
+!uploads/.gitkeep
+coverage
+.DS_Store
+*.tsbuildinfo
